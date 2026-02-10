@@ -1,0 +1,48 @@
+services:
+  backend:
+    build: ./backend
+    container_name: todo-backend
+    environment:
+      PORT: 3000
+
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: todo_user
+      DB_PASSWORD: todo_pass
+      DB_NAME: todo_db
+    depends_on:
+      - mysql
+    networks:
+      - todo-net
+
+  frontend:
+    build: ./frontend
+    container_name: todo-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - todo-net
+
+  mysql:
+    image: mysql:8.0
+    container_name: todo-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: todo_db
+      MYSQL_USER: todo_user
+      MYSQL_PASSWORD: todo_pass
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - todo-net
+
+volumes:
+  mysql-data:
+
+networks:
+  todo-net:
+    driver: bridge
+

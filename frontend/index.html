@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>To-Do App</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      padding-top: 60px;
+    }
+
+    .container {
+      background: #fff;
+      width: 400px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 16px;
+      cursor: pointer;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 4px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    li.completed span {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    .actions button {
+      background: #dc3545;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📝 To-Do App</h1>
+
+  <form id="todo-form">
+    <input type="text" id="todo-input" placeholder="Add a new task..." required />
+    <button type="submit">Add</button>
+  </form>
+
+  <ul id="todo-list"></ul>
+</div>
+
+<script>
+  const API_URL = "http://localhost:3000/todos";
+  const form = document.getElementById("todo-form");
+  const input = document.getElementById("todo-input");
+  const list = document.getElementById("todo-list");
+
+  async function fetchTodos() {
+    const res = await fetch(API_URL);
+    const todos = await res.json();
+    list.innerHTML = "";
+    todos.forEach(addTodoToDOM);
+  }
+
+  function addTodoToDOM(todo) {
+    const li = document.createElement("li");
+    li.className = todo.completed ? "completed" : "";
+
+    const span = document.createElement("span");
+    span.textContent = todo.title;
+    span.onclick = () => toggleTodo(todo.id, !todo.completed);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "Delete";
+    delBtn.onclick = () => deleteTodo(todo.id);
+
+    actions.appendChild(delBtn);
+    li.appendChild(span);
+    li.appendChild(actions);
+    list.appendChild(li);
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: input.value })
+    });
+    input.value = "";
+    fetchTodos();
+  });
+
+  async function toggleTodo(id, completed) {
+    await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ completed })
+    });
+    fetchTodos();
+  }
+
+  async function deleteTodo(id) {
+    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    fetchTodos();
+  }
+
+  fetchTodos();
+</script>
+
+</body>
+</html>
